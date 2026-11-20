@@ -3,12 +3,17 @@ package calendar
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
-const mesLargura = 27
+const (
+	mesLargura  = 27
+	ansiInverte = "\033[7m"
+	ansiReseta  = "\033[0m"
+)
 
 // RenderMes transforma um MesInfo em 8 linhas
-func RenderMes(info MesInfo) []string {
+func RenderMes(info MesInfo, hoje time.Time) []string {
 
 	linhas := make([]string, 0, 8)
 
@@ -22,10 +27,16 @@ func RenderMes(info MesInfo) []string {
 
 	col := info.PrimeiroDiaSemana
 	for dia := 1; dia <= info.DiaNoMes; dia++ {
+		diaStr := fmt.Sprintf("%3d", dia)
+
+		if info.Ano == hoje.Year() && info.Mes == hoje.Month() && dia == hoje.Day() {
+			diaStr = ansiInverte + diaStr + ansiReseta
+		}
+
 		if col == 6 {
-			row.WriteString(fmt.Sprintf("%3d", dia))
+			row.WriteString(diaStr)
 		} else {
-			row.WriteString(fmt.Sprintf("%3d ", dia))
+			row.WriteString(diaStr + " ")
 		}
 		col++
 		if col == 7 {
@@ -36,8 +47,9 @@ func RenderMes(info MesInfo) []string {
 	}
 
 	if col > 0 {
-		padding := fmt.Sprintf("%-*s", mesLargura, row.String())
-		linhas = append(linhas, padding)
+		missingCols := 7 - col
+		row.WriteString(strings.Repeat("    ", missingCols-1) + "   ")
+		linhas = append(linhas, row.String())
 	}
 
 	linhaVazia := strings.Repeat(" ", mesLargura)
