@@ -69,3 +69,37 @@ func centerText(text string, width int) string {
 	rightPad := width - len(text) - leftPad
 	return strings.Repeat(" ", leftPad) + text + strings.Repeat(" ", rightPad)
 }
+
+const espacoColunas = "   " // 3 espaços separando os meses na horizontal
+
+// RenderAno organiza os 12 meses de um ano em um grid 3x4.
+func RenderAno(ano int, hoje time.Time) []string {
+	var linhasAno []string
+
+	// 1. Cabeçalho geral do ano centralizado na largura total:
+	// (3 meses * 27 chars) + (2 espaços entre colunas * 3 chars) = 87 caracteres
+	larguraTotal := (mesLargura * 3) + (len(espacoColunas) * 2)
+	cabecalhoAno := fmt.Sprintf("%d", ano)
+	linhasAno = append(linhasAno, centerText(cabecalhoAno, larguraTotal))
+	linhasAno = append(linhasAno, "") // Linha em branco abaixo do ano
+
+	// 2. Percorre os 4 trimestres (linhas de meses: 0, 1, 2, 3)
+	for trimestre := range 4 {
+		var bloco [3][]string
+
+		// Renderiza os 3 meses deste trimestre
+		for col := range 3 {
+			numMes := time.Month(trimestre*3 + col + 1)
+			info := GetMesInfo(ano, numMes) // Ajuste o nome caso sua função no calendar.go tenha outro nome
+			bloco[col] = RenderMes(info, hoje)
+		}
+
+		// Junta linha a linha (de 0 a 7) os 3 meses lado a lado
+		for idxLinha := range 8 {
+			linhaCombinada := bloco[0][idxLinha] + espacoColunas + bloco[1][idxLinha] + espacoColunas + bloco[2][idxLinha]
+			linhasAno = append(linhasAno, linhaCombinada)
+		}
+	}
+
+	return linhasAno
+}
